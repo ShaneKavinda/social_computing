@@ -22,6 +22,12 @@ print("Tables in the database:")
 print(table_names)
 
 for table in table_names['name']:
+    table_structure = pd.read_sql_query(f'''SELECT 
+                                            name AS column_name, 
+                                            type AS column_type 
+                                        FROM 
+                                            pragma_table_info('{table}');''', con)
+    print(f'\nStructure of the table {table}: \n{table_structure}')
     print(f'contents of the {table}:')
     table = pd.read_sql_query(f"SELECT * FROM {table} LIMIT 10;", con)
     print(table.head())

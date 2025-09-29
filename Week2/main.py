@@ -1,6 +1,7 @@
 import pandas as pd
 import sqlite3
 import os
+import matplotlib.pyplot as plt
 
 # Clear the console at each run
 os.system('clear')
@@ -70,3 +71,77 @@ print(f'Average number of comments: \n {post_comments['comment_count'].mean()}')
 
 # Mediaun number of comments per post
 print(f'Median number of comments: \n {post_comments['comment_count'].median()}')
+
+# Task 9
+users = pd.read_sql_query("SELECT * FROM users", con)
+wildHorse_user_acc = users.loc[users['username'] == 'WildHorse']
+wildhorse_id = wildHorse_user_acc['id'].iloc[0] # Get ID of username WildHorse
+
+posts = pd.read_sql_query("SELECT * FROM posts;", con)
+WH_post_Ids = posts.loc[posts['user_id'] == wildhorse_id]['id']  # Get post IDs by WildHorse
+
+comments = pd.read_sql_query("SELECT * FROM comments;", con)
+WH_comments =  comments[comments['post_id'].isin(WH_post_Ids)] # Get comments on WildHorse's posts
+
+#Extract YYYY-MM date values
+WH_comments['month'] = WH_comments['created_at'].str[:7]
+
+# Group comments by month
+WH_comments = WH_comments.groupby('month').size()
+
+# Rename the column and sort by month
+monthly_counts = WH_comments.reset_index(name='monthly_comments').sort_values('month')
+
+# Get the cumulative comments count
+monthly_counts['cumulative'] = monthly_counts['monthly_comments'].cumsum()
+print(monthly_counts)
+
+# Plot the graph
+# plt.plot(monthly_counts['month'], monthly_counts['cumilative'])
+# plt.title('Cumulative comments per month for user WildHorse')
+# plt.xlabel('Month')
+# plt.ylabel('Cumilative no. of comments')
+# plt.xticks(rotation=45)
+# plt.grid(True)
+# plt.show()
+
+# Basic growth estimate 
+current_total = monthly_counts['cumulative'].iloc[-1]
+no_of_months = len(monthly_counts)
+
+avg_comments_per_mth = current_total / no_of_months
+months_til_200 = round(200 / avg_comments_per_mth)
+
+print(f"Time to reach 200 comments based on average number of comments: {months_til_200}")
+
+# Refined apporach: get rid of outliers (1.5 IQR standard)
+# refer: https://www.youtube.com/watch?v=rZJbj2I-_Ek
+
+# Compute Q1, Q3 and IQR
+Q1 = monthly_counts['monthly_comments'].quantile(0.25)
+Q3 = monthly_counts['monthly_comments'].quantile(0.75)
+IQR = Q3 - Q1
+
+# lower bound and upper bound for acceptable values
+l_bound = Q1 - (1.5 * IQR)
+u_bound = Q3 + (1.5 * IQR)
+
+print(f'lower bound: {l_bound}, upper bound: {u_bound}')
+
+# Filter months which comment count are outliers
+filterd_comment_counts = monthly_counts[(monthly_counts['monthly_comments'] >= l_bound) & (monthly_counts['monthly_comments'] <= u_bound)]
+print(filterd_comment_counts)
+
+# Recalculate average with outliers removed
+filtered_no_of_months = len(filterd_comment_counts)
+filterd_total = filterd_comment_counts['monthly_comments'].sum()
+
+new_monthly_avg = filterd_total / filtered_no_of_months
+print(f'new average: {new_monthly_avg}')
+
+time_till_200 = (200 - current_total) / new_monthly_avg
+print(f'Time till 200 comments = {time_till_200} months.')
+
+con.close()
+
+

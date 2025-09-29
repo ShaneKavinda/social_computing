@@ -129,14 +129,14 @@ monthly_counts['cumulative_comments'] = monthly_counts['monthly_comments'].cumsu
 print("Monthly and Cumulative Comments for @WildHorse")
 print(monthly_counts)
 
-# Plot
-plt.plot(monthly_counts['month'], monthly_counts['cumulative_comments'])
-plt.title("Cumulative Comments on @WildHorse's Posts Over Time")
-plt.xlabel("Month")
-plt.ylabel("Total Cumulative Comments")
-plt.xticks(rotation=45)
-plt.grid(True)
-plt.show()
+# # Plot
+# plt.plot(monthly_counts['month'], monthly_counts['cumulative_comments'])
+# plt.title("Cumulative Comments on @WildHorse's Posts Over Time")
+# plt.xlabel("Month")
+# plt.ylabel("Total Cumulative Comments")
+# plt.xticks(rotation=45)
+# plt.grid(True)
+# plt.show()
 
 # Naive growth estimate
 current_total = monthly_counts['cumulative_comments'].iloc[-1]
